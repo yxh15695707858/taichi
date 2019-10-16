@@ -1,9 +1,7 @@
 import taichi as ti
 
 def grad_test1():
-  ti.reset()
   ti.cfg.use_llvm = True
-  # ti.cfg.arch = ti.cuda
 
   x = ti.var(ti.i32)
 
@@ -11,13 +9,9 @@ def grad_test1():
   def place():
     ti.root.dense(ti.i, 1).place(x)
 
-  @ti.kernel
-  def func():
-    x[0] = 0
+  x[0] = 0
 
-  func.materialize()
-
-  ti.reset()
+  ti.runtime.prog = None
   ti.lang_core.test_throw()
 
 
