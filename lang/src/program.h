@@ -37,7 +37,7 @@ class Program {
   CompileConfig config;
   CPUProfiler cpu_profiler;
   Context context;
-  std::unique_ptr<TaichiLLVMContext> llvm_context_host, llvm_context_device;
+  static std::unique_ptr<TaichiLLVMContext> llvm_context_host, llvm_context_device;
   bool sync;  // device/host synchronized?
   bool clear_all_gradients_initialized;
   bool finalized;
@@ -88,6 +88,10 @@ class Program {
   void synchronize();
 
   void finalize() {
+    llvm_context_host = nullptr;
+    llvm_context_device = nullptr;
+
+    /*
     current_program = nullptr;
     for (auto &dll : loaded_dlls) {
       dlclose(dll);
@@ -95,6 +99,7 @@ class Program {
     UnifiedAllocator::free();
     finalized = true;
     num_instances -= 1;
+     */
   }
 
   ~Program() {

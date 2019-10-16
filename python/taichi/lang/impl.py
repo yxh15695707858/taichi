@@ -126,11 +126,9 @@ class PyTaichi:
 
   def clear(self):
     if self.prog:
-      self.prog.finalize()
+      # self.prog.finalize()
       self.prog = None
-    Expr.materialize_layout_callback = None
-    Expr.layout_materialized = False
-    
+
   def get_tape(self, loss=None):
     from .tape import Tape
     return Tape(self, loss)
@@ -161,9 +159,6 @@ def reset():
   global pytaichi
   global root
   pytaichi.clear()
-  pytaichi = PyTaichi()
-  taichi_lang_core.reset_default_compile_config()
-  root = SNode(taichi_lang_core.get_root())
 
 
 def inside_kernel():

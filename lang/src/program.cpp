@@ -20,6 +20,8 @@ Program *current_program = nullptr;
 std::atomic<int> Program::num_instances;
 SNode root;
 
+std::unique_ptr<TaichiLLVMContext> Program::llvm_context_host, Program::llvm_context_device;
+
 FunctionType Program::compile(Kernel &kernel) {
   FunctionType ret = nullptr;
   if (config.arch == Arch::x86_64) {
