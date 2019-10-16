@@ -9,7 +9,7 @@ def grad_test1():
   def place():
     ti.root.dense(ti.i, 1).place(x)
 
-  x[0] = 0
+  ti.runtime.materialize()
 
   ti.runtime.prog = None
   ti.lang_core.test_throw()
