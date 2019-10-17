@@ -65,7 +65,7 @@ TaichiLLVMContext::TaichiLLVMContext(Arch arch) : arch(arch) {
 
 std::unique_ptr<TaichiLLVMJIT> jit_holder;
 TaichiLLVMContext::~TaichiLLVMContext() {
-  jit_holder = std::move(this->jit);
+  // jit_holder = std::move(this->jit);
   TC_INFO("destorying taichi llvm context");
 }
 
