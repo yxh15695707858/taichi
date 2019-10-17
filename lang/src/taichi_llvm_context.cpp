@@ -34,31 +34,39 @@ TLANG_NAMESPACE_BEGIN
 
 static llvm::ExitOnError exit_on_err;
 
-TaichiLLVMContext::TaichiLLVMContext(Arch arch) : arch(arch) {
-  llvm::InitializeAllTargets();
-  llvm::remove_fatal_error_handler();
-  llvm::install_fatal_error_handler(
-      [](void *user_data, const std::string &reason, bool gen_crash_diag) {
-        TC_ERROR("LLVM Fatal Error: {}", reason);
-      },
-      nullptr);
+static bool initialized = false;
 
-  if (arch == Arch::x86_64) {
-    llvm::InitializeNativeTarget();
-    llvm::InitializeNativeTargetAsmPrinter();
-    llvm::InitializeNativeTargetAsmParser();
-  } else {
-    LLVMInitializeNVPTXTarget();
-    LLVMInitializeNVPTXTargetMC();
-    LLVMInitializeNVPTXTargetInfo();
-    LLVMInitializeNVPTXAsmPrinter();
+TaichiLLVMContext::TaichiLLVMContext(Arch arch) : arch(arch) {
+  if (!initialized) {
+    initialized = true;
+    llvm::InitializeAllTargets();
+    llvm::remove_fatal_error_handler();
+    llvm::install_fatal_error_handler(
+        [](void *user_data, const std::string &reason, bool gen_crash_diag) {
+          TC_ERROR("LLVM Fatal Error: {}", reason);
+        },
+        nullptr);
+
+    if (arch == Arch::x86_64) {
+      llvm::InitializeNativeTarget();
+      llvm::InitializeNativeTargetAsmPrinter();
+      llvm::InitializeNativeTargetAsmParser();
+    } else {
+      LLVMInitializeNVPTXTarget();
+      LLVMInitializeNVPTXTargetMC();
+      LLVMInitializeNVPTXTargetInfo();
+      LLVMInitializeNVPTXAsmPrinter();
+    }
   }
   ctx = std::make_unique<llvm::LLVMContext>();
   TC_INFO("Creating llvm context for arch: {}", arch_name(arch));
   jit = exit_on_err(TaichiLLVMJIT::create(arch));
 }
 
+std::unique_ptr<TaichiLLVMJIT> jit_holder;
 TaichiLLVMContext::~TaichiLLVMContext() {
+  jit_holder = std::move(this->jit);
+  TC_INFO("destorying taichi llvm context");
 }
 
 llvm::Type *TaichiLLVMContext::get_data_type(DataType dt) {
