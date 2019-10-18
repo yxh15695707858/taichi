@@ -2,6 +2,7 @@ import taichi as ti
 
 def grad_test1():
   ti.cfg.use_llvm = True
+  ti.set_gdb_trigger()
 
   x = ti.var(ti.i32)
 

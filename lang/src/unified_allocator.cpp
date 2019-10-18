@@ -76,7 +76,7 @@ void taichi::Tlang::UnifiedAllocator::create() {
 #else
   dst = std::malloc(sizeof(UnifiedAllocator));
 #endif
-  allocator() = new (dst) UnifiedAllocator(1LL << 10, true);
+  allocator() = new (dst) UnifiedAllocator(1LL << 20, true);
 }
 
 void taichi::Tlang::UnifiedAllocator::free() {
