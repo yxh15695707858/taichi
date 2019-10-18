@@ -58,7 +58,7 @@ class TaichiLLVMJIT {
         Mangle(ES, this->DL),
         Ctx(llvm::make_unique<LLVMContext>()) {
     ES.getMainJITDylib().setGenerator(
-        cantFail(DynamicLibrarySearchGenerator::GetForCurrentProcess(DL.getGlobalPrefix())));
+        cantFail(DynamicLibrarySearchGenerator::GetForCurrentProcess(DL)));
   }
 
   const DataLayout &getDataLayout() const {
