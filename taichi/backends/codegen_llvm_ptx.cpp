@@ -1,14 +1,14 @@
 // A work-in-progress llvm backend
 
-#include <set>
 #include <taichi/common/util.h>
 #include <taichi/io/io.h>
+#include <set>
 
-#include "../ir.h"
-#include "../program.h"
+#include "cuda_context.h"
 #include "../tlang_util.h"
 #include "codegen_cuda.h"
-#include "cuda_context.h"
+#include "../program.h"
+#include "../ir.h"
 
 #if defined(TLANG_WITH_CUDA)
 #include "cuda_runtime.h"
@@ -24,12 +24,13 @@ using namespace llvm;
 // https://docs.nvidia.com/cuda/archive/10.0/pdf/NVVM_IR_Specification.pdf
 
 class CodeGenLLVMGPU : public CodeGenLLVM {
-public:
+ public:
   int kernel_grid_dim;
   int kernel_block_dim;
 
   CodeGenLLVMGPU(CodeGenBase *codegen_base, Kernel *kernel)
-      : CodeGenLLVM(codegen_base, kernel) {}
+      : CodeGenLLVM(codegen_base, kernel) {
+  }
 
   void mark_function_as_cuda_kernel(llvm::Function *func) {
     /*******************************************************************
@@ -80,14 +81,8 @@ public:
           TC_INFO("Launching kernel {}<<<{}, {}>>>", task.name, task.grid_dim,
                   task.block_dim);
 
-        if (get_current_program().config.enable_profiler) {
-          get_current_program().profiler_llvm->start(task.name);
-        }
         cuda_context.launch((CUfunction)task.cuda_func, &context, task.grid_dim,
                             task.block_dim);
-        if (get_current_program().config.enable_profiler) {
-          get_current_program().profiler_llvm->stop();
-        }
       }
     };
 #else
@@ -139,19 +134,19 @@ public:
     auto input_taichi_type = stmt->operand->ret_type.data_type;
     auto op = stmt->op_type;
 
-#define UNARY_STD(x)                                                           \
-  else if (op == UnaryOpType::x) {                                             \
-    if (input_taichi_type == DataType::f32) {                                  \
-      stmt->value =                                                            \
-          builder->CreateCall(get_runtime_function("__nv_" #x "f"), input);    \
-    } else if (input_taichi_type == DataType::f64) {                           \
-      stmt->value =                                                            \
-          builder->CreateCall(get_runtime_function("__nv_" #x), input);        \
-    } else if (input_taichi_type == DataType::i32) {                           \
-      stmt->value = builder->CreateCall(get_runtime_function(#x), input);      \
-    } else {                                                                   \
-      TC_NOT_IMPLEMENTED                                                       \
-    }                                                                          \
+#define UNARY_STD(x)                                                        \
+  else if (op == UnaryOpType::x) {                                          \
+    if (input_taichi_type == DataType::f32) {                               \
+      stmt->value =                                                         \
+          builder->CreateCall(get_runtime_function("__nv_" #x "f"), input); \
+    } else if (input_taichi_type == DataType::f64) {                        \
+      stmt->value =                                                         \
+          builder->CreateCall(get_runtime_function("__nv_" #x), input);     \
+    } else if (input_taichi_type == DataType::i32) {                        \
+      stmt->value = builder->CreateCall(get_runtime_function(#x), input);   \
+    } else {                                                                \
+      TC_NOT_IMPLEMENTED                                                    \
+    }                                                                       \
   }
     if (op == UnaryOpType::abs) {
       if (input_taichi_type == DataType::f32) {
@@ -276,7 +271,7 @@ public:
       cudaDeviceGetAttribute(&num_SMs, cudaDevAttrMultiProcessorCount, 0);
       int max_block_dim;
       cudaDeviceGetAttribute(&max_block_dim, cudaDevAttrMaxBlockDimX, 0);
-      kernel_grid_dim = num_SMs * 32; // each SM can have 16-32 resident blocks
+      kernel_grid_dim = num_SMs * 32;  // each SM can have 16-32 resident blocks
       kernel_block_dim = stmt->block_dim;
       if (kernel_block_dim == 0)
         kernel_block_dim = get_current_program().config.default_gpu_block_dim;
